@@ -1,6 +1,7 @@
 /**
  * @fileoverview Rewrite script to replace 'imgUrl' in JSON response with an empty string.
- *
+ * @Script author: Tian Hao
+ * @Update time：2024-1-4
  * @supported Quantumult X (v1.0.5-build173)
  */
 
