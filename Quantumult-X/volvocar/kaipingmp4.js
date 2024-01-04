@@ -9,7 +9,7 @@
 // We assume it is in JSON format.
 
 [rewrite_local]
-^https:\/\/apigateway\.digitalvolvo\.com\/app\/settings\/api\/v1\/openad\/selectUping$ url script-response-body https://raw.githubusercontent.com/th815/Profiles/main/Quantumult-X/volvocar/mp4.js
+^https:\/\/apigateway\.digitalvolvo\.com\/app\/settings\/api\/v1\/openad\/selectUping$ url script-response-body https://raw.githubusercontent.com/th815/Profiles/main/Quantumult-X/volvocar/kaipingmp4.js
 
 
 [mitm] 
