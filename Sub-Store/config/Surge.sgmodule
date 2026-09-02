@@ -11,6 +11,19 @@
 # 原因: bundle 中存在未加 typeof 守卫的 new TextEncoder() 调用, 部分 Surge
 #       脚本引擎不保证提供全局 TextEncoder/TextDecoder, 缺失会直接 ReferenceError.
 #       polyfill 为「已有则不覆盖」实现, 环境正常时零影响.
+#
+#   2. engine 由上游的 {{{engine}}}(默认 auto) 改回硬编码 webview
+#      这是 2025-09 为适配 Surge 5.7.6 (2838) 所做的改动, 升级时务必保留.
+#      依据 Surge 官方手册 (manual.nssurge.com/scripting/overview.html):
+#        - engine 参数需要 iOS 5.9.0+ / Mac 5.5.0+ 才支持
+#        - auto = 「WebView 可用时就用 WebView」, 不可用时静默回落 JSC
+#        - JSC 跑在 iOS NE 进程内, 有内存上限; 官方建议「脚本用到 WebAPI 时
+#          必须显式配置 engine=webview」
+#      Sub-Store bundle 依赖 WebAPI (fetch / crypto / TextEncoder 等) 且体积已达
+#      1.3MB, 一旦 auto 回落到 JSC 会直接崩, Surge 随即跳过脚本走 passthrough,
+#      表现为前端连不上后端 (前端 v2.30.00 能显示, 模块版本为空, Network Error).
+#      注: #!arguments 里的 engine:auto 仅为与上游保持参数表一致, 脚本行不引用它.
+#
 # 升级: 执行 ./build-poly.sh <版本号> 重新生成即可, 无需改动本文件.
 # ---------------------------------------------------------------------------
 
@@ -18,10 +31,10 @@
 hostname = %APPEND% sub.store
 
 [Script]
-Sub-Store Core=type=http-request,pattern=^https?:\/\/sub\.store\/((download)|api\/(preview|sync|(utils\/node-info))),script-path=https://raw.githubusercontent.com/th815/Profiles/main/Sub-Store/sub-store-1.poly.js,requires-body=true,timeout={{{timeout}}},ability="{{{ability}}}",engine={{{engine}}},max-size={{{max_size}}},argument="cors={{{cors}}}"
+Sub-Store Core=type=http-request,pattern=^https?:\/\/sub\.store\/((download)|api\/(preview|sync|(utils\/node-info))),script-path=https://raw.githubusercontent.com/th815/Profiles/main/Sub-Store/sub-store-1.poly.js,requires-body=true,timeout={{{timeout}}},ability="{{{ability}}}",engine=webview,max-size={{{max_size}}},argument="cors={{{cors}}}"
 
-Sub-Store Simple=type=http-request,pattern=^https?:\/\/sub\.store,script-path=https://raw.githubusercontent.com/th815/Profiles/main/Sub-Store/sub-store-0.poly.js,requires-body=true,timeout={{{timeout}}},engine={{{engine}}},max-size={{{max_size}}},argument="cors={{{cors}}}"
+Sub-Store Simple=type=http-request,pattern=^https?:\/\/sub\.store,script-path=https://raw.githubusercontent.com/th815/Profiles/main/Sub-Store/sub-store-0.poly.js,requires-body=true,timeout={{{timeout}}},engine=webview,max-size={{{max_size}}},argument="cors={{{cors}}}"
 
-{{{sync}}}=type=cron,cronexp="{{{cronexp}}}",wake-system=1,timeout={{{timeout}}},script-path=https://raw.githubusercontent.com/th815/Profiles/main/Sub-Store/cron-sync-artifacts.poly.js,engine={{{engine}}},argument="sync_success_notify={{{sync_success_notify}}}"
+{{{sync}}}=type=cron,cronexp="{{{cronexp}}}",wake-system=1,timeout={{{timeout}}},script-path=https://raw.githubusercontent.com/th815/Profiles/main/Sub-Store/cron-sync-artifacts.poly.js,engine=webview,argument="sync_success_notify={{{sync_success_notify}}}"
 
-{{{produce}}}=type=cron,cronexp="{{{produce_cronexp}}}",wake-system=1,timeout={{{timeout}}},script-path=https://raw.githubusercontent.com/th815/Profiles/main/Sub-Store/cron-sync-artifacts.poly.js,engine={{{engine}}},argument="sub={{{produce_sub}}}&col={{{produce_col}}}"
+{{{produce}}}=type=cron,cronexp="{{{produce_cronexp}}}",wake-system=1,timeout={{{timeout}}},script-path=https://raw.githubusercontent.com/th815/Profiles/main/Sub-Store/cron-sync-artifacts.poly.js,engine=webview,argument="sub={{{produce_sub}}}&col={{{produce_col}}}"
